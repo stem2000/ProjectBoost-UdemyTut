@@ -12,8 +12,11 @@ public class CollisionHandler : MonoBehaviour
 
     AudioSource _audioSource;
 
-    bool isTransitioning = false;
+    bool _isTransitioning = false;
+    bool _isCollisionsDisabled = false;
 
+    [SerializeField] int _xMaxPos = 100;
+    [SerializeField] int _yMaxPos = 100;
 
     void Start()
     {
@@ -21,9 +24,28 @@ public class CollisionHandler : MonoBehaviour
     }
 
 
+    void Update()
+    {
+        RespondToDebugKeys();
+        ControlPlayerPosition();
+    }
+
+
+    private void RespondToDebugKeys()
+    {
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            LoadNextLevel();
+        }
+        else if (Input.GetKeyDown(KeyCode.C))
+        {
+            _isCollisionsDisabled = !_isCollisionsDisabled;
+        }
+    }
+
     void OnCollisionEnter(Collision collision)
     {
-        if (isTransitioning) { return;}
+        if (_isTransitioning || _isCollisionsDisabled) { return;}
 
         switch (collision.gameObject.tag)
         {
@@ -45,7 +67,7 @@ public class CollisionHandler : MonoBehaviour
 
     void StartCrashSequence()
     {
-        isTransitioning = true;
+        _isTransitioning = true;
         _audioSource.Stop();
         _audioSource.PlayOneShot(_crash);
         _crashParticles.Play();
@@ -56,7 +78,7 @@ public class CollisionHandler : MonoBehaviour
 
     void StartSuccessSequence()
     {
-        isTransitioning = true;
+        _isTransitioning = true;
         _audioSource.Stop();
         _audioSource.PlayOneShot(_success);
         _successParticles.Play();
@@ -81,5 +103,15 @@ public class CollisionHandler : MonoBehaviour
             nextSceneIndex = 0;
         }
         SceneManager.LoadScene(nextSceneIndex);
+    }
+
+
+    void ControlPlayerPosition()
+    {
+        if((Mathf.Abs(transform.position.x) > _xMaxPos || Mathf.Abs(transform.position.y) > _yMaxPos) && !_isTransitioning)
+        {
+            _isTransitioning = true;
+            StartCrashSequence();
+        } 
     }
 }
